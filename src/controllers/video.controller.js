@@ -43,7 +43,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     }
     const videoFile = req.files?.video?.[0]?.path
     const thumbnailFile = req.files?.thumbnail?.[0]?.path
-    
+
     const videoUploadResult = await uploadOnCloudinary(videoFile, "video")
     if(!videoUploadResult || !videoUploadResult.secure_url){
         throw new ApiError(500, "Video upload failed")
@@ -139,6 +139,20 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid video id")
+    }
+    const video = await Video.findById(videoId)
+    if (!video) {
+        throw new ApiError(404, "Video not found")
+    }
+    if (video.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to update this video")
+    }
+    video.isPublished = !video.isPublished
+    await video.save()
+    return res.status(200).json(new ApiResponse(200, video, "Video publish status toggled successfully"))
+    
 })
 
 export {
