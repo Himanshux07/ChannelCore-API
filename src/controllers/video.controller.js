@@ -21,6 +21,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     if(userId){
         filter.owner = userId
     }
+    filter.isPublished = true
     const sort={}
 
     if(sortBy){
@@ -70,9 +71,12 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid video id")
     }
 
-    const video = Video.findById(videoId)
+    const video = await Video.findById(videoId)
     if(!video){
         throw new ApiError(404, "Video not found")
+    }
+    if(!video.isPublished && video.owner.toString() !== req.user._id.toString()){
+        throw new ApiError(403, "unpublished video. You are not authorized to view this video")
     }
     return res.status(200).json(new ApiResponse(200, video, "Video fetched successfully"))
 })
