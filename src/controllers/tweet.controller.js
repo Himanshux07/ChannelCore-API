@@ -8,12 +8,12 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
     const { content } = req.body
-    if(!content){
+    if(!content || content.trim() === ""){
         throw new ApiError(400, "Content is required")
     }
     const tweet = await Tweet.create({
         owner: req.user._id,
-        content
+        content : content.trim()
     })
     return res.status(201).json(new ApiResponse(201, tweet, "Tweet created successfully"))
 })
